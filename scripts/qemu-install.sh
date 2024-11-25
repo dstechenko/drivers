@@ -1,13 +1,13 @@
 #!/bin/bash
 
-curl -O http://ftp.us.debian.org/debian/dists/stable/main/installer-arm64/current/images/cdrom/initrd.gz
-curl -O http://ftp.us.debian.org/debian/dists/stable/main/installer-arm64/current/images/cdrom/vmlinuz
-curl -O -L https://cdimage.debian.org/debian-cd/current/arm64/iso-dvd/debian-12.8.0-arm64-DVD-1.iso
+# curl -O http://ftp.us.debian.org/debian/dists/stable/main/installer-arm64/current/images/cdrom/initrd.gz
+# curl -O http://ftp.us.debian.org/debian/dists/stable/main/installer-arm64/current/images/cdrom/vmlinuz
+# curl -O -L https://cdimage.debian.org/debian-cd/current/arm64/iso-dvd/debian-12.8.0-arm64-DVD-1.iso
 
-mkdir -p imgs
-qemu-img create -f qcow2 qemu/debian-arm.sda.qcow2 32G
+# mkdir -p qemu
+# ../qemu/build/qemu-img create -f qcow2 qemu/debian-arm.sda.qcow2 32G
 
-qemu-system-aarch64 \
+../qemu/build/qemu-system-aarch64 \
   -accel hvf \
   -m 4G \
   -machine type=virt \
@@ -30,9 +30,14 @@ qemu-system-aarch64 \
 # chroot /target sh -c "sed -i '/deb cdrom/d' /etc/apt/sources.list"
 # chroot /target sh -c "echo 'PermitRootLogin yes' > /etc/ssh/sshd_config.d/root_ssh.conf"
 # chroot /target sh -c "mkdir -p /var/run/sshd && /sbin/sshd -D"
-# chroot /target sh -c "rm /etc/ssh/sshd_config.d/root_ssh.conf"
 
-scp -P 5555 root@localhost:/boot/vmlinuz qemu/vmlinuz-from-guest
-scp -P 5555 root@localhost:/boot/initrd.img qemu/initrd.img-from-guest
+# scp -P 5555 root@localhost:/boot/vmlinuz qemu/vmlinuz-from-guest
+# scp -P 5555 root@localhost:/boot/initrd.img qemu/initrd.img-from-guest
 
-rm -rf debian-12.8.0-arm64-DVD-1.iso vmlinuz initrd.gz
+# rm -rf debian-12.8.0-arm64-DVD-1.iso vmlinuz initrd.gz
+
+# ssh-copy-id -p 5555 root@localhost
+
+# apt update
+# apt-get install usbutils build-essential
+# apt-get install linux-headers-$(uname -r)

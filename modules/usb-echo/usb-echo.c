@@ -20,8 +20,8 @@ enum {
 };
 
 static const USBDescStrings usb_echo_desc_strings = {
-    [STR_MANUFACTURER] = "QEMU",
-    [STR_PRODUCT]      = "QEMU USB ECHO",
+    [STR_MANUFACTURER] = "META",
+    [STR_PRODUCT]      = "META USB ECHO",
     [STR_SERIAL]       = "0x42",
     [STR_CONFIG_HIGH] = "High speed config (usb 2.0)",
 };
