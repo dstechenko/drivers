@@ -16,14 +16,14 @@ enum {
     STR_MANUFACTURER = 1,
     STR_PRODUCT,
     STR_SERIAL,
-    STR_CONFIG_HIGH,
+    STR_CONFIG_SUPER,
 };
 
 static const USBDescStrings usb_echo_desc_strings = {
     [STR_MANUFACTURER] = "META",
     [STR_PRODUCT]      = "META USB ECHO",
     [STR_SERIAL]       = "0x42",
-    [STR_CONFIG_HIGH] = "High speed config (usb 2.0)",
+    [STR_CONFIG_SUPER] = "Super speed config (usb 3.0)",
 };
 
 static void usb_echo_handle_control(USBDevice *dev, USBPacket *p, int request, int value, int index, int length, uint8_t *data) {
@@ -62,46 +62,48 @@ static void usb_echo_handle_realize(USBDevice *dev, Error **errp) {
     usb_desc_init(dev);
 }
 
-static const USBDescIface usb_echo_high_iface_desc = {
-    .bInterfaceNumber              = 0,
-    .bNumEndpoints                 = 2,
-    .bInterfaceClass               = USB_CLASS_COMM,
-    .bInterfaceSubClass            = 0x01,
-    .bInterfaceProtocol            = 0x01,
-    .eps = (USBDescEndpoint[]) {
-        {
-            .bEndpointAddress      = USB_DIR_IN | 0x01,
-            .bmAttributes          = USB_ENDPOINT_XFER_BULK,
-            .wMaxPacketSize        = 512,
-        },{
-            .bEndpointAddress      = USB_DIR_OUT | 0x02,
-            .bmAttributes          = USB_ENDPOINT_XFER_BULK,
-            .wMaxPacketSize        = 512,
+static const USBDescIface usb_echo_high_iface_desc[] = {
+    {
+        .bInterfaceNumber              = 0,
+        .bNumEndpoints                 = 2,
+        .bInterfaceClass               = USB_CLASS_COMM,
+        .bInterfaceSubClass            = 0x01,
+        .bInterfaceProtocol            = 0x01,
+        .eps = (USBDescEndpoint[]) {
+            {
+                .bEndpointAddress      = USB_DIR_IN | 0x01,
+                .bmAttributes          = USB_ENDPOINT_XFER_BULK,
+                .wMaxPacketSize        = 1024,
+            },{
+                .bEndpointAddress      = USB_DIR_OUT | 0x02,
+                .bmAttributes          = USB_ENDPOINT_XFER_BULK,
+                .wMaxPacketSize        = 1024,
+            },
         },
-    }
+    },
 };
 
 static const USBDescDevice usb_echo_high_desc = {
-    .bcdUSB                        = 0x0200,
+    .bcdUSB                        = 0x0300,
     .bMaxPacketSize0               = 64,
     .bNumConfigurations            = 1,
     .confs = (USBDescConfig[]) {
         {
             .bNumInterfaces        = 1,
             .bConfigurationValue   = 1,
-            .iConfiguration        = STR_CONFIG_HIGH,
+            .iConfiguration        = STR_CONFIG_SUPER,
             .bmAttributes          = USB_CFG_ATT_ONE | USB_CFG_ATT_SELFPOWER,
             .nif = 1,
-            .ifs = &usb_echo_high_iface_desc,
+            .ifs = usb_echo_high_iface_desc,
         },
     },
 };
 
 static const USBDesc usb_echo_desc = {
     .id = {
-        .idVendor          = 0x0042,
-        .idProduct         = 0x0042,
-        .bcdDevice         = 0x0042,
+        .idVendor          = 0x08DE,
+        .idProduct         = 0x0001,
+        .bcdDevice         = 0x0001,
         .iManufacturer     = STR_MANUFACTURER,
         .iProduct          = STR_PRODUCT,
         .iSerialNumber     = STR_SERIAL,
