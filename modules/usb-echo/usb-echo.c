@@ -6,6 +6,12 @@
 
 #include "desc.h"
 
+#define USB_ECHO_VENDOR_ID  0x08DE
+#define USB_ECHO_PRODUCT_ID 0x0001
+
+#define USB_ECHO_EP_IN  0x01
+#define USB_ECHO_EP_OUT 0x02
+
 typedef struct {
     USBDevice dev;
     uint8_t buf[64];
@@ -38,20 +44,23 @@ static void usb_echo_handle_control(USBDevice *dev, USBPacket *p, int request, i
     error_report("usb-echo: handle control unexpected packet");
 }
 
+static int8_t buf[1]= {0};
+static bool buf_ready = false;
+
 static void usb_echo_handle_data(USBDevice *dev, USBPacket *p) {
     USBEchoState *s = DO_UPCAST(USBEchoState, dev, dev);
 
-    if (p->ep->nr == 1) {
-        usb_packet_copy(p, s->buf, sizeof(s->buf));
-        // usb_packet_setup(p, USB_TOKEN_IN, 2, s->buf_len);
-        // usb_packet_copy(p, s->buf, s->buf_len);
-        // usb_packet_complete(p, USB_RET_SUCCESS);
-    } else if (p->ep->nr == 2) {
-        // usb_packet_setup(p, USB_TOKEN_IN, 2, s->buf_len);
-        usb_packet_copy(p, s->buf, s->buf_len);
-        // usb_packet_complete(p, USB_RET_SUCCESS);
+    if (p->ep->nr == USB_ECHO_EP_IN && buf_ready) {
+        usb_packet_copy(p, buf, sizeof(buf));
+        buf_ready = false;
+        error_report("usb-echo: handle data in, buf: %x", buf[0]);
+    } else if (p->ep->nr == USB_ECHO_EP_OUT) {
+        usb_packet_copy(p, buf, sizeof(buf));
+        buf_ready = true;
+        error_report("usb-echo: handle data out, buf: %x", buf[0]);
     } else {
-        // usb_packet_complete(p, USB_RET_STALL);
+        p->status = USB_RET_STALL;
+        error_report("usb-echo: handle data stall");
     }
 }
 
@@ -71,13 +80,15 @@ static const USBDescIface usb_echo_high_iface_desc[] = {
         .bInterfaceProtocol            = 0x01,
         .eps = (USBDescEndpoint[]) {
             {
-                .bEndpointAddress      = USB_DIR_IN | 0x01,
-                .bmAttributes          = USB_ENDPOINT_XFER_BULK,
-                .wMaxPacketSize        = 1024,
+                .bEndpointAddress      = USB_DIR_IN | USB_ECHO_EP_IN,
+                .bmAttributes          = USB_ENDPOINT_XFER_INT,
+                .wMaxPacketSize        = 512,
+                .bInterval             = 1,
             },{
-                .bEndpointAddress      = USB_DIR_OUT | 0x02,
-                .bmAttributes          = USB_ENDPOINT_XFER_BULK,
-                .wMaxPacketSize        = 1024,
+                .bEndpointAddress      = USB_DIR_OUT | USB_ECHO_EP_OUT,
+                .bmAttributes          = USB_ENDPOINT_XFER_INT,
+                .wMaxPacketSize        = 512,
+                .bInterval             = 1,
             },
         },
     },
@@ -101,8 +112,8 @@ static const USBDescDevice usb_echo_high_desc = {
 
 static const USBDesc usb_echo_desc = {
     .id = {
-        .idVendor          = 0x08DE,
-        .idProduct         = 0x0001,
+        .idVendor          = USB_ECHO_VENDOR_ID,
+        .idProduct         = USB_ECHO_PRODUCT_ID,
         .bcdDevice         = 0x0001,
         .iManufacturer     = STR_MANUFACTURER,
         .iProduct          = STR_PRODUCT,
